@@ -1,7 +1,7 @@
 import csv
 import requests
 
-CSV_FILE = 'data/lotto.csv'
+CSV_FILE = 'data/lotto645.csv'
 
 def get_latest_drw_no():
     try:
