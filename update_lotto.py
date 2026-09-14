@@ -6,14 +6,11 @@ CSV_FILE = 'data/lotto645.csv'
 def get_latest_drw_no():
     try:
         with open(CSV_FILE, 'r', encoding='utf-8') as f:
-            # 단순 split 대신 csv.reader를 써서 "1,239" 같은 따옴표 안의 콤마도 안전하게 처리
             reader = list(csv.reader(f))
-            # 빈 줄을 제외하고 유효한 데이터가 있는 마지막 줄 찾기
             valid_rows = [row for row in reader if row] 
             
             if len(valid_rows) > 1:
                 last_row = valid_rows[-1]
-                # 첫 번째 열(회차)에서 콤마와 띄어쓰기를 완전히 제거 후 정수로 변환
                 latest_no_str = last_row[0].replace(',', '').strip()
                 return int(latest_no_str)
     except FileNotFoundError:
@@ -23,10 +20,12 @@ def get_latest_drw_no():
     return 0
 
 def fetch_lotto_data(drw_no):
-    url = f"https://www.dhlottery.co.kr/lt645/selectPstLt645InfoNew.do?srchLtEpsd={drw_no}"
+    target_int = int(drw_no)
+    url = f"https://www.dhlottery.co.kr/lt645/selectPstLt645InfoNew.do?srchLtEpsd={target_int}"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://dhlottery.co.kr",
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "X-Requested-With": "XMLHttpRequest"
     }
@@ -35,17 +34,16 @@ def fetch_lotto_data(drw_no):
         session = requests.Session()
         session.get("https://dhlottery.co.kr", headers=headers, timeout=5)
         
-        response = session.get(url, params=params, headers=headers, timeout=5)
+        response = session.get(url, headers=headers, timeout=5)
         
         if response.status_code == 200:
             res_json = response.json()
             lotto_list = res_json.get("data", {}).get("list", [])
             
-            # 1. API 응답에서 target_int 회차와 일치하는 데이터 탐색
+            # API 응답 리스트에서 일치하는 회차 탐색
             for item in lotto_list:
                 item_epsd = item.get("ltEpsd")
                 if item_epsd is not None and int(item_epsd) == target_int:
-                    # 기존 csv 저장 포맷과 완전히 동일한 8개 값 반환
                     return [
                         int(item.get("ltEpsd")),
                         int(item.get("tm1WnNo")),
@@ -57,7 +55,6 @@ def fetch_lotto_data(drw_no):
                         int(item.get("bnsWnNo"))
                     ]
             
-            # 2. 리스트에 target_int가 없을 때 디버깅 안내 출력
             fetched_epsds = [x.get("ltEpsd") for x in lotto_list]
             print(f"ℹ️ [디버그] {target_int}회차를 찾지 못했습니다. (서버 응답 회차 목록: {fetched_epsds})")
 
@@ -79,9 +76,9 @@ def main():
         with open(CSV_FILE, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(new_data)
-        print(f"✅ {target_no}회차 자동 업데이트 완료!")
+        print(f"✅ {target_no}회차 자동 업데이트 완료")
     else:
-        print(f"ℹ️ {target_no}회차 데이터가 아직 없습니다. (추첨 전이거나 API 지연)")
+        print(f"ℹ️ {target_no}회차 데이터가 아직 없음. (추첨 전이거나 API 지연)")
 
 if __name__ == "__main__":
     main()
