@@ -45,7 +45,7 @@ def fetch_lotto_data(drw_no):
                 item_epsd = item.get("ltEpsd")
                 if item_epsd is not None and int(item_epsd) == target_int:
                     return [
-                        int(item.get("ltEpsd")),
+                        f"{target_int:,}",
                         int(item.get("tm1WnNo")),
                         int(item.get("tm2WnNo")),
                         int(item.get("tm3WnNo")),
@@ -73,12 +73,24 @@ def main():
     new_data = fetch_lotto_data(target_no)
     
     if new_data:
+        needs_newline = False
+        if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
+            with open(CSV_FILE, 'rb') as f:
+                f.seek(-1, os.SEEK_END)
+                last_char = f.read(1)
+                if last_char not in (b'\n', b'\r'):
+                    needs_newline = True
+
         with open(CSV_FILE, 'a', newline='', encoding='utf-8') as f:
+            if needs_newline:
+                f.write('\n')
+            
             writer = csv.writer(f)
             writer.writerow(new_data)
-        print(f"✅ {target_no}회차 자동 업데이트 완료")
+            
+        print(f"✅ {target_no}회차 자동 업데이트 완료 (저장 형태: {new_data[0]})")
     else:
-        print(f"ℹ️ {target_no}회차 데이터가 아직 없음. (추첨 전이거나 API 지연)")
+        print(f"ℹ️ {target_no}회차 데이터가 아직 없습니다. (추첨 전이거나 API 지연)")
 
 if __name__ == "__main__":
     main()
