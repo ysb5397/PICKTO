@@ -32,30 +32,38 @@ def fetch_lotto_data(drw_no):
     }
     
     try:
-        response = requests.get(url, params=params, headers=headers, timeout=5)
+        session = requests.Session()
+        session.get("https://dhlottery.co.kr", headers=headers, timeout=5)
+        
+        response = session.get(url, params=params, headers=headers, timeout=5)
         
         if response.status_code == 200:
             res_json = response.json()
             lotto_list = res_json.get("data", {}).get("list", [])
             
-            # 리스트 중에서 찾는 회차(target_no)와 일치하는 데이터 탐색
+            # 1. API 응답에서 target_int 회차와 일치하는 데이터 탐색
             for item in lotto_list:
-                if item.get("ltEpsd") == target_no:
-                    # 기존 코드와 완벽히 동일하게 8개 항목 리스트로 조립하여 리턴
+                item_epsd = item.get("ltEpsd")
+                if item_epsd is not None and int(item_epsd) == target_int:
+                    # 기존 csv 저장 포맷과 완전히 동일한 8개 값 반환
                     return [
-                        item.get("ltEpsd"),    # 회차
-                        item.get("tm1WnNo"),   # 번호1
-                        item.get("tm2WnNo"),   # 번호2
-                        item.get("tm3WnNo"),   # 번호3
-                        item.get("tm4WnNo"),   # 번호4
-                        item.get("tm5WnNo"),   # 번호5
-                        item.get("tm6WnNo"),   # 번호6
-                        item.get("bnsWnNo")    # 보너스 번호
+                        int(item.get("ltEpsd")),
+                        int(item.get("tm1WnNo")),
+                        int(item.get("tm2WnNo")),
+                        int(item.get("tm3WnNo")),
+                        int(item.get("tm4WnNo")),
+                        int(item.get("tm5WnNo")),
+                        int(item.get("tm6WnNo")),
+                        int(item.get("bnsWnNo"))
                     ]
-                    
+            
+            # 2. 리스트에 target_int가 없을 때 디버깅 안내 출력
+            fetched_epsds = [x.get("ltEpsd") for x in lotto_list]
+            print(f"ℹ️ [디버그] {target_int}회차를 찾지 못했습니다. (서버 응답 회차 목록: {fetched_epsds})")
+
     except Exception as e:
-        print(f"❌ API 요청 중 오류 발생: {e}")
-        
+        print(f"❌ [디버그] API 호출 실패: {e}")
+
     return None
 
 def main():
