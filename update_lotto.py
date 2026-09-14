@@ -24,7 +24,17 @@ def get_latest_drw_no():
 
 def fetch_lotto_data(drw_no):
     url = f"https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo={drw_no}"
-    response = requests.get(url)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "X-Requested-With": "XMLHttpRequest"
+    }
+    
+    response = requests.get(url, headers=headers)
+
+    response.raise_for_status() 
+    
     data = response.json()
     
     # 추첨일(drwNoDate)을 빼고 정확히 8개 항목만 리턴!
