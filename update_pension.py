@@ -58,9 +58,20 @@ def main():
     new_data = fetch_pension_data(target_no)
     
     if new_data:
+        needs_newline = False
+        if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
+            with open(CSV_FILE, 'rb') as f:
+                f.seek(-1, os.SEEK_END)
+                if f.read(1) not in (b'\n', b'\r'):
+                    needs_newline = True
+
         with open(CSV_FILE, 'a', newline='', encoding='utf-8') as f:
+            if needs_newline:
+                f.write('\n')
+                
             writer = csv.writer(f)
             writer.writerow(new_data)
+            
         print(f"✅ 연금복권 {target_no}회차 무적 업데이트 완료!")
     else:
         print(f"❌ {target_no}회차 데이터를 가져오지 못했습니다. 추첨 지연이거나 구조 변경을 확인하세요.")
