@@ -23,7 +23,7 @@ def get_latest_drw_no():
     return 0
 
 def fetch_lotto_data(drw_no):
-    url = f"https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo={drw_no}"
+    url = f"https://www.dhlottery.co.kr/lt645/selectPstLt645InfoNew.do?srchLtEpsd={drw_no}"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
