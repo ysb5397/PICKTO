@@ -31,20 +31,31 @@ def fetch_lotto_data(drw_no):
         "X-Requested-With": "XMLHttpRequest"
     }
     
-    response = requests.get(url, headers=headers)
-
-    response.raise_for_status() 
-    
-    data = response.json()
-    
-    # 추첨일(drwNoDate)을 빼고 정확히 8개 항목만 리턴!
-    if data['returnValue'] == 'success':
-        return [
-            data['drwNo'],
-            data['drwtNo1'], data['drwtNo2'], data['drwtNo3'],
-            data['drwtNo4'], data['drwtNo5'], data['drwtNo6'],
-            data['bnusNo']
-        ]
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            res_json = response.json()
+            lotto_list = res_json.get("data", {}).get("list", [])
+            
+            # 리스트 중에서 찾는 회차(target_no)와 일치하는 데이터 탐색
+            for item in lotto_list:
+                if item.get("ltEpsd") == target_no:
+                    # 기존 코드와 완벽히 동일하게 8개 항목 리스트로 조립하여 리턴
+                    return [
+                        item.get("ltEpsd"),    # 회차
+                        item.get("tm1WnNo"),   # 번호1
+                        item.get("tm2WnNo"),   # 번호2
+                        item.get("tm3WnNo"),   # 번호3
+                        item.get("tm4WnNo"),   # 번호4
+                        item.get("tm5WnNo"),   # 번호5
+                        item.get("tm6WnNo"),   # 번호6
+                        item.get("bnsWnNo")    # 보너스 번호
+                    ]
+                    
+    except Exception as e:
+        print(f"❌ API 요청 중 오류 발생: {e}")
+        
     return None
 
 def main():
