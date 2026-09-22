@@ -5,6 +5,16 @@ on:
     # 국내 시간 일요일 00:00 실행 (UTC 기준 토요일 15:00)
     - cron: '0 15 * * 6'
   workflow_dispatch:
+    inputs:
+      target:
+        description: '업데이트 대상 선택'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - pension
+          - lotto
 
 jobs:
   update-data:
@@ -25,9 +35,11 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Run Lotto 6/45 update script
+        if: github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'lotto'
         run: python update_lotto.py
 
       - name: Run Pension 720+ update script
+        if: github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'pension'
         run: python update_pension.py
 
       - name: Commit and Push changes
